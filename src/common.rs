@@ -2,10 +2,8 @@
 pub(crate) use std::{
   collections::HashMap,
   fmt::{self, Display, Formatter},
-  iter::Peekable,
   path::PathBuf,
   process,
-  str::Chars,
 };
 
 // dependencies

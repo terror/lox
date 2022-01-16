@@ -16,6 +16,7 @@ lazy_static! {
     m.insert("false", False);
     m.insert("for", For);
     m.insert("fun", Fun);
+    m.insert("if", If);
     m.insert("nil", Nil);
     m.insert("or", Or);
     m.insert("print", Print);
@@ -99,12 +100,12 @@ impl<'src> Lexer<'src> {
 
   /// Check if a character is a digit.
   fn is_digit(&self, c: char) -> bool {
-    c >= '0' && c <= '9'
+    ('0'..='9').contains(&c)
   }
 
   /// Check if a character is a letter.
   fn is_alpha(&self, c: char) -> bool {
-    c >= 'a' && c <= 'z' || (c >= 'A' && c <= 'Z') || c == '_'
+    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || c == '_'
   }
 
   /// Check if a character is a letter or a number.

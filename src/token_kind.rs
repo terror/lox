@@ -41,7 +41,6 @@ pub(crate) enum TokenKind {
   True,
   Var,
   While,
-  Whitespace,
 }
 
 impl Display for TokenKind {
@@ -89,7 +88,6 @@ impl Display for TokenKind {
         True => "true",
         Var => "var",
         While => "while",
-        Whitespace => "",
       }
     )
   }
