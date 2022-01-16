@@ -149,6 +149,8 @@ impl<'src> Lexer<'src> {
       '/' => {
         if self.match_token('/')? {
           self.lex_comment()
+        } else if self.match_token('*')? {
+          self.lex_block_comment()
         } else {
           self.lex_single(Slash)
         }
@@ -193,6 +195,29 @@ impl<'src> Lexer<'src> {
     while self.peek() != '\n' && !self.is_end() {
       self.advance()?;
     }
+    Ok(())
+  }
+
+  /// Block comments get ignored until we encounter the terminator `*/` or we
+  /// reach the end of the source code.
+  fn lex_block_comment(&mut self) -> Result<()> {
+    while !self.is_end() {
+      if self.peek() == '*' && self.peek_next() == '/' {
+        self.position.current += 2;
+        return Ok(());
+      }
+      if self.peek() == '\n' {
+        self.position.line += 1;
+      }
+      self.advance()?;
+    }
+
+    if self.is_end() {
+      return Err(Error::Lexer {
+        message: "Unterminated block comment.".into(),
+      });
+    }
+
     Ok(())
   }
 
