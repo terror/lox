@@ -311,13 +311,13 @@ mod tests {
 
   #[test]
   fn string() {
-    assert_eq!(tokens("\"hello\""), vec![StringLiteral, Eof])
+    assert_eq!(tokens("\"foo\""), vec![StringLiteral, Eof])
   }
 
   #[test]
   fn ident() {
     assert_eq!(
-      tokens("var hello = 5"),
+      tokens("var foo = 1"),
       vec![Var, Identifier, Equal, Number, Eof]
     );
   }
@@ -325,8 +325,24 @@ mod tests {
   #[test]
   fn whitespace() {
     assert_eq!(
-      tokens("var \thello = \t5\nprint hello"),
+      tokens("var \tfoo = \t1\nprint foo"),
       vec![Var, Identifier, Equal, Number, Print, Identifier, Eof]
+    );
+  }
+
+  #[test]
+  fn line_comment() {
+    assert_eq!(
+      tokens("// var foo = 1\nprint foo"),
+      vec![Print, Identifier, Eof]
+    );
+  }
+
+  #[test]
+  fn block_comment() {
+    assert_eq!(
+      tokens("/* var foo = 1\n print foo\n*/ var bar = 1"),
+      vec![Var, Identifier, Equal, Number, Eof]
     );
   }
 }
