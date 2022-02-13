@@ -3,8 +3,8 @@ use crate::common::*;
 #[derive(Debug)]
 pub(crate) struct Lexer<'src> {
   position: Position,
-  src:      &'src str,
-  tokens:   Vec<Token<'src>>,
+  src: &'src str,
+  tokens: Vec<Token<'src>>,
 }
 
 lazy_static! {
@@ -40,9 +40,9 @@ impl<'src> Lexer<'src> {
   fn new(src: &'src str) -> Self {
     Lexer {
       position: Position {
-        start:   0,
+        start: 0,
         current: 0,
-        line:    1,
+        line: 1,
       },
       src,
       tokens: Vec::new(),
@@ -181,7 +181,11 @@ impl<'src> Lexer<'src> {
 
   /// Choose `then` if the current character matches `expected`, else choose
   /// `otherwise`.
-  fn lex_choice(&mut self, expected: char, choices: (TokenKind, TokenKind)) -> Result<()> {
+  fn lex_choice(
+    &mut self,
+    expected: char,
+    choices: (TokenKind, TokenKind),
+  ) -> Result<()> {
     let (then, otherwise) = choices;
     match self.match_token(expected)? {
       true => self.token(then),
@@ -266,14 +270,12 @@ impl<'src> Lexer<'src> {
       self.advance()?;
     }
 
-    self.token(
-      KEYWORDS
-        .get(&self.src[self.position.start..self.position.current])
-        .ok_or_else(|| Error::Lexer {
-          message: "Unexpected identifier.".into(),
-        })?
-        .clone(),
-    )
+    // Check if its a keyword
+    if let Some(kind) = KEYWORDS.get(&self.src[self.position.start..self.position.current]) {
+      return Ok(self.token(kind.to_owned())?);
+    }
+
+    self.token(Identifier)
   }
 
   /// Add a token to `self.tokens` given a `TokenKind`.
@@ -287,5 +289,44 @@ impl<'src> Lexer<'src> {
     });
 
     Ok(())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn tokens(src: &str) -> Vec<TokenKind> {
+    Lexer::lex(src)
+      .unwrap()
+      .iter()
+      .map(|token| token.to_owned().kind)
+      .collect::<Vec<TokenKind>>()
+  }
+
+  #[test]
+  fn number() {
+    assert_eq!(tokens("1 + 1"), vec![Number, Plus, Number, Eof]);
+  }
+
+  #[test]
+  fn string() {
+    assert_eq!(tokens("\"hello\""), vec![StringLiteral, Eof])
+  }
+
+  #[test]
+  fn ident() {
+    assert_eq!(
+      tokens("var hello = 5"),
+      vec![Var, Identifier, Equal, Number, Eof]
+    );
+  }
+
+  #[test]
+  fn whitespace() {
+    assert_eq!(
+      tokens("var \thello = \t5\nprint hello"),
+      vec![Var, Identifier, Equal, Number, Print, Identifier, Eof]
+    );
   }
 }
