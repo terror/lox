@@ -271,7 +271,9 @@ impl<'src> Lexer<'src> {
     }
 
     // Check if its a keyword
-    if let Some(kind) = KEYWORDS.get(&self.src[self.position.start..self.position.current]) {
+    if let Some(kind) =
+      KEYWORDS.get(&self.src[self.position.start..self.position.current])
+    {
       return Ok(self.token(kind.to_owned())?);
     }
 

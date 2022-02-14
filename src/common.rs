@@ -20,11 +20,16 @@ pub(crate) use {
 pub(crate) use crate::{
   arguments::Arguments,
   error::Error,
+  expr::Expr,
   lexer::Lexer,
+  literal::Literal,
   position::Position,
   token::Token,
   token_kind::TokenKind::{self, *},
 };
+
+// traits
+pub(crate) use crate::visitor::Visitor;
 
 // type aliases
 pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;

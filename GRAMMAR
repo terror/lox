@@ -11,4 +11,4 @@ unary -> ("-", "!") expression ;
 
 binary -> expression operator expression ;
 
-operation -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
+operator -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
