@@ -7,7 +7,7 @@ impl Visitor<Literal> for Interpreter {
   fn visit_expr(&self, expr: Expr) -> Literal {
     match expr {
       Expr::Literal { value } => self.visit_literal(value),
-      Expr::Grouping { .. } => self.visit_grouping(expr),
+      Expr::Grouping { expression } => self.visit_grouping(*expression),
       Expr::Unary { operator, right } => self.visit_unary(operator, *right),
       Expr::Binary {
         left,
@@ -134,5 +134,10 @@ mod tests {
   #[test]
   fn arithmetic() -> Result {
     Test::new().source("1 + 1 / 2").expected("1.5").run()
+  }
+
+  #[test]
+  fn grouping() -> Result {
+    Test::new().source("(1 + 1) / 2").expected("1").run()
   }
 }
