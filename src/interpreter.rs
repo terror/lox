@@ -64,7 +64,7 @@ impl Interpreter {
       if let Literal::Number(r) = right {
         return match operator.kind {
           BangEqual => Literal::Boolean(l != r),
-          Equal => Literal::Boolean(l == r),
+          EqualEqual => Literal::Boolean(l == r),
           Greater => Literal::Boolean(l > r),
           GreaterEqual => Literal::Boolean(l >= r),
           Less => Literal::Boolean(l < r),
