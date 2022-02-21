@@ -38,7 +38,7 @@ impl<'src> Lexer<'src> {
 
   /// Create and return a new `Lexer` instance based on `src`.
   fn new(src: &'src str) -> Self {
-    Lexer {
+    Self {
       position: Position {
         start: 0,
         current: 0,
@@ -63,9 +63,14 @@ impl<'src> Lexer<'src> {
   }
 
   /// Increment our current position and return the characters that resides at
-  /// that position.
+  /// that the previous position.
   fn advance(&mut self) -> Result<char> {
     self.position.current += 1;
+    self.prev()
+  }
+
+  /// Return the character that resides at the previous position.
+  fn prev(&self) -> Result<char> {
     self
       .src
       .chars()
@@ -274,7 +279,7 @@ impl<'src> Lexer<'src> {
     if let Some(kind) =
       KEYWORDS.get(&self.src[self.position.start..self.position.current])
     {
-      return Ok(self.token(kind.to_owned())?);
+      return self.token(kind.to_owned());
     }
 
     self.token(Identifier)

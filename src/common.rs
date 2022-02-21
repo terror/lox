@@ -3,7 +3,9 @@ pub(crate) use std::{
   collections::HashMap,
   fmt::{self, Display, Formatter},
   path::PathBuf,
+  cell::Cell,
   process,
+  num
 };
 
 // dependencies
@@ -23,6 +25,7 @@ pub(crate) use crate::{
   expr::Expr,
   lexer::Lexer,
   literal::Literal,
+  parser::Parser,
   position::Position,
   token::Token,
   token_kind::TokenKind::{self, *},
@@ -32,4 +35,4 @@ pub(crate) use crate::{
 pub(crate) use crate::visitor::Visitor;
 
 // type aliases
-pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
+pub(crate) type Result<T = (), E = Error> = std::result::Result<T, E>;

@@ -5,6 +5,7 @@ pub(crate) enum Literal {
   Boolean(bool),
   Number(f64),
   String(String),
+  Nil,
 }
 
 impl Display for Literal {
@@ -17,6 +18,7 @@ impl Display for Literal {
           String::from(if *value { "true" } else { "false" }),
         Literal::Number(value) => (*value).to_string(),
         Literal::String(value) => value.to_string(),
+        Literal::Nil => "nil".to_string(),
       }
     )
   }

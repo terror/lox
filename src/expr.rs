@@ -14,7 +14,7 @@ pub(crate) enum Expr<'src> {
   Call {
     callee: Box<Expr<'src>>,
     paren: Token<'src>,
-    arguments: Vec<Box<Expr<'src>>>,
+    arguments: Vec<Expr<'src>>,
   },
   Get {
     object: Box<Expr<'src>>,

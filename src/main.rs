@@ -6,6 +6,7 @@ mod error;
 mod expr;
 mod lexer;
 mod literal;
+mod parser;
 mod position;
 mod token;
 mod token_kind;

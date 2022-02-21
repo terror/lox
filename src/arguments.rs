@@ -29,7 +29,7 @@ impl Arguments {
       editor.add_history_entry(line.as_str());
       editor.save_history(&history)?;
 
-      println!("{:?}", Lexer::lex(&line)?);
+      println!("{:?}", Parser::parse(Lexer::lex(&line)?));
     }
   }
 }
