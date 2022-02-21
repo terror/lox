@@ -195,7 +195,10 @@ impl<'src> Parser<'src> {
 
     if self.match_kind(StringLiteral) {
       return Ok(Expr::Literal {
-        value: Literal::String(self.prev().lexeme.to_string()),
+        value: Literal::String(
+          // chop off the surrdounding quotes
+          self.prev().lexeme[1..self.prev().lexeme.len() - 1].to_string(),
+        ),
       });
     }
 

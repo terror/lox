@@ -81,6 +81,12 @@ impl Interpreter {
     if let Literal::String(l) = left {
       if let Literal::String(r) = right {
         return match operator.kind {
+          BangEqual => Literal::Boolean(l != r),
+          EqualEqual => Literal::Boolean(l == r),
+          Greater => Literal::Boolean(l > r),
+          GreaterEqual => Literal::Boolean(l >= r),
+          Less => Literal::Boolean(l < r),
+          LessEqual => Literal::Boolean(l <= r),
           Plus => Literal::String(format!("{}{}", l, r)),
           _ => Literal::Nil,
         };
@@ -139,5 +145,10 @@ mod tests {
   #[test]
   fn grouping() -> Result {
     Test::new().source("(1 + 1) / 2").expected("1").run()
+  }
+
+  #[test]
+  fn string_concatenation() -> Result {
+    Test::new().source("\"1\" + \"1\"").expected("11").run()
   }
 }
