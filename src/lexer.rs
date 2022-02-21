@@ -303,53 +303,86 @@ impl<'src> Lexer<'src> {
 mod tests {
   use super::*;
 
-  fn tokens(src: &str) -> Vec<TokenKind> {
-    Lexer::lex(src)
-      .unwrap()
-      .iter()
-      .map(|token| token.to_owned().kind)
-      .collect::<Vec<TokenKind>>()
+  struct Test {
+    source: String,
+    expected: Vec<TokenKind>,
+  }
+
+  impl Test {
+    fn new() -> Self {
+      Self {
+        source: String::new(),
+        expected: Vec::new(),
+      }
+    }
+
+    fn source(mut self, source: &str) -> Self {
+      self.source = source.to_owned();
+      self
+    }
+
+    fn expected(mut self, expected: Vec<TokenKind>) -> Self {
+      self.expected = expected;
+      self
+    }
+
+    fn run(&self) -> Result {
+      let tokens = Lexer::lex(&self.source)?
+        .iter()
+        .map(|token| token.to_owned().kind)
+        .collect::<Vec<TokenKind>>();
+
+      assert_eq!(tokens, self.expected);
+
+      Ok(())
+    }
   }
 
   #[test]
-  fn number() {
-    assert_eq!(tokens("1 + 1"), vec![Number, Plus, Number, Eof]);
+  fn number() -> Result {
+    Test::new()
+      .source("1 + 1")
+      .expected(vec![Number, Plus, Number, Eof])
+      .run()
   }
 
   #[test]
-  fn string() {
-    assert_eq!(tokens("\"foo\""), vec![StringLiteral, Eof])
+  fn string() -> Result {
+    Test::new()
+      .source("\"foo\"")
+      .expected(vec![StringLiteral, Eof])
+      .run()
   }
 
   #[test]
-  fn ident() {
-    assert_eq!(
-      tokens("var foo = 1"),
-      vec![Var, Identifier, Equal, Number, Eof]
-    );
+  fn ident() -> Result {
+    Test::new()
+      .source("var foo = 1")
+      .expected(vec![Var, Identifier, Equal, Number, Eof])
+      .run()
   }
 
   #[test]
-  fn whitespace() {
-    assert_eq!(
-      tokens("var \tfoo = \t1\nprint foo"),
-      vec![Var, Identifier, Equal, Number, Print, Identifier, Eof]
-    );
+  fn whitespace() -> Result {
+    Test::new()
+      .source("var \tfoo = \t1\nprint foo")
+      .expected(vec![Var, Identifier, Equal, Number, Print, Identifier, Eof])
+      .run()
   }
 
   #[test]
-  fn line_comment() {
-    assert_eq!(
-      tokens("// var foo = 1\nprint foo"),
-      vec![Print, Identifier, Eof]
-    );
+  fn line_comment() -> Result {
+    Test::new()
+      .source("// var foo = 1\nprint foo")
+      .expected(vec![Print, Identifier, Eof])
+      .run()
   }
 
   #[test]
-  fn block_comment() {
-    assert_eq!(
-      tokens("/* var foo = 1\n print foo\n*/ var bar = 1"),
-      vec![Var, Identifier, Equal, Number, Eof]
-    );
+  fn block_comment() -> Result {
+    Test::new()
+      .source("/* var foo = 1\n print foo\n*/ var bar = 1")
+      .expected(vec![Var, Identifier, Equal, Number, Eof])
+      .run()
   }
 }

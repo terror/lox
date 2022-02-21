@@ -4,6 +4,7 @@ mod arguments;
 mod common;
 mod error;
 mod expr;
+mod interpreter;
 mod lexer;
 mod literal;
 mod parser;
@@ -11,7 +12,6 @@ mod position;
 mod token;
 mod token_kind;
 mod visitor;
-mod interpreter;
 
 fn main() {
   if let Err(error) = Arguments::from_args().run() {

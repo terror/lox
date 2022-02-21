@@ -15,7 +15,5 @@ pub enum Error {
   },
 
   #[snafu(context(false), display("Failed to parse float: {}", source))]
-  ParseFloat {
-    source: num::ParseFloatError
-  }
+  ParseFloat { source: num::ParseFloatError },
 }

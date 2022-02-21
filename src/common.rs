@@ -1,11 +1,11 @@
 // stdlib
 pub(crate) use std::{
+  cell::Cell,
   collections::HashMap,
   fmt::{self, Display, Formatter},
+  num,
   path::PathBuf,
-  cell::Cell,
   process,
-  num
 };
 
 // dependencies
@@ -23,13 +23,13 @@ pub(crate) use crate::{
   arguments::Arguments,
   error::Error,
   expr::Expr,
+  interpreter::Interpreter,
   lexer::Lexer,
   literal::Literal,
   parser::Parser,
   position::Position,
   token::Token,
   token_kind::TokenKind::{self, *},
-  interpreter::Interpreter
 };
 
 // traits
