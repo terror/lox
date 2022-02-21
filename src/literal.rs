@@ -1,11 +1,11 @@
 use crate::common::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum Literal {
   Boolean(bool),
+  Nil,
   Number(f64),
   String(String),
-  Nil,
 }
 
 impl Display for Literal {
@@ -16,9 +16,9 @@ impl Display for Literal {
       match self {
         Literal::Boolean(value) =>
           String::from(if *value { "true" } else { "false" }),
+        Literal::Nil => "nil".to_string(),
         Literal::Number(value) => (*value).to_string(),
         Literal::String(value) => value.to_string(),
-        Literal::Nil => "nil".to_string(),
       }
     )
   }

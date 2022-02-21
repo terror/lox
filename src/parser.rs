@@ -189,15 +189,29 @@ impl<'src> Parser<'src> {
 
     if self.match_kind(Number) {
       return Ok(Expr::Literal {
-        value: Literal::Number(self.prev().lexeme.parse()?),
+        value: Literal::Number(
+          self
+            .prev()
+            .lexeme
+            .ok_or(Error::Parser {
+              message: "Expected valid lexeme on `Number` token".to_owned(),
+            })?
+            .parse()?,
+        ),
       });
     }
 
     if self.match_kind(StringLiteral) {
       return Ok(Expr::Literal {
         value: Literal::String(
-          // chop off the surrdounding quotes
-          self.prev().lexeme[1..self.prev().lexeme.len() - 1].to_string(),
+          self
+            .prev()
+            .lexeme
+            .ok_or(Error::Parser {
+              message: "Expected valid lexeme on `StringLiteral` token"
+                .to_owned(),
+            })?
+            .to_string(),
         ),
       });
     }

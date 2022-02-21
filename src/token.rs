@@ -1,8 +1,8 @@
 use crate::common::*;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Token<'src> {
   pub(crate) kind: TokenKind,
-  pub(crate) lexeme: &'src str,
+  pub(crate) lexeme: Option<&'src str>,
   pub(crate) position: Position,
 }

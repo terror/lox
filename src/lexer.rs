@@ -287,7 +287,13 @@ impl<'src> Lexer<'src> {
 
   /// Add a token to `self.tokens` given a `TokenKind`.
   fn token(&mut self, kind: TokenKind) -> Result<()> {
-    let lexeme = &self.src[self.position.start..self.position.current];
+    let lexeme = match kind {
+      StringLiteral => {
+        Some(&self.src[self.position.start + 1..self.position.current - 1])
+      }
+      Eof => None,
+      _ => Some(&self.src[self.position.start..self.position.current]),
+    };
 
     self.tokens.push(Token {
       kind,
@@ -303,12 +309,12 @@ impl<'src> Lexer<'src> {
 mod tests {
   use super::*;
 
-  struct Test {
+  struct Test<'a> {
     source: String,
-    expected: Vec<TokenKind>,
+    expected: Vec<(TokenKind, Option<&'a str>)>,
   }
 
-  impl Test {
+  impl<'a> Test<'a> {
     fn new() -> Self {
       Self {
         source: String::new(),
@@ -316,33 +322,44 @@ mod tests {
       }
     }
 
-    fn source(mut self, source: &str) -> Self {
-      self.source = source.to_owned();
-      self
+    fn source(self, source: &str) -> Self {
+      Self {
+        source: source.to_owned(),
+        ..self
+      }
     }
 
-    fn expected(mut self, expected: Vec<TokenKind>) -> Self {
-      self.expected = expected;
-      self
+    fn expected(self, expected: Vec<(TokenKind, Option<&'a str>)>) -> Self {
+      Self { expected, ..self }
     }
 
     fn run(&self) -> Result {
       let tokens = Lexer::lex(&self.source)?
         .iter()
-        .map(|token| token.to_owned().kind)
-        .collect::<Vec<TokenKind>>();
+        .map(|token| (token.to_owned().kind, token.lexeme))
+        .collect::<Vec<(TokenKind, Option<&str>)>>();
 
-      assert_eq!(tokens, self.expected);
+      pretty_assertions::assert_eq!(tokens, self.expected);
 
       Ok(())
     }
   }
 
   #[test]
+  fn empty() -> Result {
+    Test::new().source("").expected(vec![(Eof, None)]).run()
+  }
+
+  #[test]
   fn number() -> Result {
     Test::new()
       .source("1 + 1")
-      .expected(vec![Number, Plus, Number, Eof])
+      .expected(vec![
+        (Number, Some("1")),
+        (Plus, Some("+")),
+        (Number, Some("1")),
+        (Eof, None),
+      ])
       .run()
   }
 
@@ -350,39 +367,225 @@ mod tests {
   fn string() -> Result {
     Test::new()
       .source("\"foo\"")
-      .expected(vec![StringLiteral, Eof])
+      .expected(vec![(StringLiteral, Some("foo")), (Eof, None)])
       .run()
   }
 
   #[test]
   fn ident() -> Result {
     Test::new()
-      .source("var foo = 1")
-      .expected(vec![Var, Identifier, Equal, Number, Eof])
+      .source("var foo = 1;")
+      .expected(vec![
+        (Var, Some("var")),
+        (Identifier, Some("foo")),
+        (Equal, Some("=")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (Eof, None),
+      ])
       .run()
   }
 
   #[test]
   fn whitespace() -> Result {
     Test::new()
-      .source("var \tfoo = \t1\nprint foo")
-      .expected(vec![Var, Identifier, Equal, Number, Print, Identifier, Eof])
+      .source("var \tfoo = \t1;\n print foo;")
+      .expected(vec![
+        (Var, Some("var")),
+        (Identifier, Some("foo")),
+        (Equal, Some("=")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (Print, Some("print")),
+        (Identifier, Some("foo")),
+        (Semicolon, Some(";")),
+        (Eof, None),
+      ])
       .run()
   }
 
   #[test]
   fn line_comment() -> Result {
     Test::new()
-      .source("// var foo = 1\nprint foo")
-      .expected(vec![Print, Identifier, Eof])
+      .source("// var foo = 1;\nprint foo;")
+      .expected(vec![
+        (Print, Some("print")),
+        (Identifier, Some("foo")),
+        (Semicolon, Some(";")),
+        (Eof, None),
+      ])
       .run()
   }
 
   #[test]
   fn block_comment() -> Result {
     Test::new()
-      .source("/* var foo = 1\n print foo\n*/ var bar = 1")
-      .expected(vec![Var, Identifier, Equal, Number, Eof])
+      .source("/*\n var foo = 1;\nprint foo;\n*/\nvar bar = 1;")
+      .expected(vec![
+        (Var, Some("var")),
+        (Identifier, Some("bar")),
+        (Equal, Some("=")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (Eof, None),
+      ])
+      .run()
+  }
+
+  #[test]
+  fn conditionals() -> Result {
+    Test::new()
+      .source(
+        "var foo = 1;\nvar bar = 2;\nif (foo == 1) {\nprint bar;\n} else {\nprint foo;\n}"
+      )
+      .expected(vec![
+        (Var, Some("var")),
+        (Identifier, Some("foo")),
+        (Equal, Some("=")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (Var, Some("var")),
+        (Identifier, Some("bar")),
+        (Equal, Some("=")),
+        (Number, Some("2")),
+        (Semicolon, Some(";")),
+        (If, Some("if")),
+        (ParenL, Some("(")),
+        (Identifier, Some("foo")),
+        (EqualEqual, Some("==")),
+        (Number, Some("1")),
+        (ParenR, Some(")")),
+        (BraceL, Some("{")),
+        (Print, Some("print")),
+        (Identifier, Some("bar")),
+        (Semicolon, Some(";")),
+        (BraceR, Some("}")),
+        (Else, Some("else")),
+        (BraceL, Some("{")),
+        (Print, Some("print")),
+        (Identifier, Some("foo")),
+        (Semicolon, Some(";")),
+        (BraceR, Some("}")),
+        (Eof, None),
+      ])
+      .run()
+  }
+
+  #[test]
+  fn functions() -> Result {
+    Test::new()
+      .source(
+        "fun add(a, b) {\n return a + b;\n }\n fun main(a, b) {\n return add(a, b);\n }\n print main(2, 2);"
+      )
+      .expected(vec![
+        (Fun, Some("fun")),
+        (Identifier, Some("add")),
+        (ParenL, Some("(")),
+        (Identifier, Some("a")),
+        (Comma, Some(",")),
+        (Identifier, Some("b")),
+        (ParenR, Some(")")),
+        (BraceL, Some("{")),
+        (Return, Some("return")),
+        (Identifier, Some("a")),
+        (Plus, Some("+")),
+        (Identifier, Some("b")),
+        (Semicolon, Some(";")),
+        (BraceR, Some("}")),
+        (Fun, Some("fun")),
+        (Identifier, Some("main")),
+        (ParenL, Some("(")),
+        (Identifier, Some("a")),
+        (Comma, Some(",")),
+        (Identifier, Some("b")),
+        (ParenR, Some(")")),
+        (BraceL, Some("{")),
+        (Return, Some("return")),
+        (Identifier, Some("add")),
+        (ParenL, Some("(")),
+        (Identifier, Some("a")),
+        (Comma, Some(",")),
+        (Identifier, Some("b")),
+        (ParenR, Some(")")),
+        (Semicolon, Some(";")),
+        (BraceR, Some("}")),
+        (Print, Some("print")),
+        (Identifier, Some("main")),
+        (ParenL, Some("(")),
+        (Number, Some("2")),
+        (Comma, Some(",")),
+        (Number, Some("2")),
+        (ParenR, Some(")")),
+        (Semicolon, Some(";")),
+        (Eof, None),
+      ])
+      .run()
+  }
+
+  #[test]
+  fn for_loop() -> Result {
+    Test::new()
+      .source(
+        "for (var i = 0; i < 10; i = i + 1) {\n  print \"hello, world!\"\n}",
+      )
+      .expected(vec![
+        (For, Some("for")),
+        (ParenL, Some("(")),
+        (Var, Some("var")),
+        (Identifier, Some("i")),
+        (Equal, Some("=")),
+        (Number, Some("0")),
+        (Semicolon, Some(";")),
+        (Identifier, Some("i")),
+        (Less, Some("<")),
+        (Number, Some("10")),
+        (Semicolon, Some(";")),
+        (Identifier, Some("i")),
+        (Equal, Some("=")),
+        (Identifier, Some("i")),
+        (Plus, Some("+")),
+        (Number, Some("1")),
+        (ParenR, Some(")")),
+        (BraceL, Some("{")),
+        (Print, Some("print")),
+        (StringLiteral, Some("hello, world!")),
+        (BraceR, Some("}")),
+        (Eof, None),
+      ])
+      .run()
+  }
+
+  #[test]
+  fn while_loop() -> Result {
+    Test::new()
+      .source(
+        "var foo = 1;\nwhile (foo < 10) {\n  print foo;\n  foo = foo + 1;\n }",
+      )
+      .expected(vec![
+        (Var, Some("var")),
+        (Identifier, Some("foo")),
+        (Equal, Some("=")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (While, Some("while")),
+        (ParenL, Some("(")),
+        (Identifier, Some("foo")),
+        (Less, Some("<")),
+        (Number, Some("10")),
+        (ParenR, Some(")")),
+        (BraceL, Some("{")),
+        (Print, Some("print")),
+        (Identifier, Some("foo")),
+        (Semicolon, Some(";")),
+        (Identifier, Some("foo")),
+        (Equal, Some("=")),
+        (Identifier, Some("foo")),
+        (Plus, Some("+")),
+        (Number, Some("1")),
+        (Semicolon, Some(";")),
+        (BraceR, Some("}")),
+        (Eof, None),
+      ])
       .run()
   }
 }

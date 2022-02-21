@@ -131,7 +131,7 @@ mod tests {
 
       let result = self.interpreter.eval(ast);
 
-      assert_eq!(result.to_string(), self.expected);
+      pretty_assertions::assert_eq!(result.to_string(), self.expected);
 
       Ok(())
     }
