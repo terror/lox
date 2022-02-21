@@ -29,6 +29,7 @@ pub(crate) use crate::{
   position::Position,
   token::Token,
   token_kind::TokenKind::{self, *},
+  interpreter::Interpreter
 };
 
 // traits

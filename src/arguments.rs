@@ -23,13 +23,18 @@ impl Arguments {
     let mut editor = Editor::<()>::new();
     editor.load_history(&history).ok();
 
+    let interpreter = Interpreter::new();
+
     loop {
       let line = editor.readline("> ")?;
 
       editor.add_history_entry(line.as_str());
       editor.save_history(&history)?;
 
-      println!("{:?}", Parser::parse(Lexer::lex(&line)?));
+      println!(
+        "{}",
+        interpreter.clone().eval(Parser::parse(Lexer::lex(&line)?)?)
+      );
     }
   }
 }
