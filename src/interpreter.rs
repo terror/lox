@@ -99,7 +99,7 @@ impl Interpreter {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use {super::*, pretty_assertions::assert_eq};
 
   struct Test {
     interpreter: Interpreter,
@@ -116,24 +116,28 @@ mod tests {
       }
     }
 
-    fn source(mut self, source: &str) -> Self {
-      self.source = source.to_owned();
-      self
+    fn source(self, source: &str) -> Self {
+      Self {
+        source: source.to_owned(),
+        ..self
+      }
     }
 
-    fn expected(mut self, expected: &str) -> Self {
-      self.expected = expected.to_owned();
-      self
+    fn expected(self, expected: &str) -> Self {
+      Self {
+        expected: expected.to_owned(),
+        ..self
+      }
     }
 
     fn run(&self) -> Result {
-      let ast = Parser::parse(Lexer::lex(&self.source)?)?;
-
-      let result = self.interpreter.eval(ast);
-
-      pretty_assertions::assert_eq!(result.to_string(), self.expected);
-
-      Ok(())
+      Ok(assert_eq!(
+        self
+          .interpreter
+          .eval(Parser::parse(Lexer::lex(&self.source)?)?)
+          .to_string(),
+        self.expected
+      ))
     }
   }
 

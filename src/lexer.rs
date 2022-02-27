@@ -307,7 +307,7 @@ impl<'src> Lexer<'src> {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use {super::*, pretty_assertions::assert_eq};
 
   struct Test<'a> {
     source: String,
@@ -334,14 +334,13 @@ mod tests {
     }
 
     fn run(&self) -> Result {
-      let tokens = Lexer::lex(&self.source)?
-        .iter()
-        .map(|token| (token.to_owned().kind, token.lexeme))
-        .collect::<Vec<(TokenKind, Option<&str>)>>();
-
-      pretty_assertions::assert_eq!(tokens, self.expected);
-
-      Ok(())
+      Ok(assert_eq!(
+        Lexer::lex(&self.source)?
+          .iter()
+          .map(|token| (token.to_owned().kind, token.lexeme))
+          .collect::<Vec<(TokenKind, Option<&str>)>>(),
+        self.expected
+      ))
     }
   }
 
@@ -353,7 +352,11 @@ mod tests {
   #[test]
   fn number() -> Result {
     Test::new()
-      .source("1 + 1")
+      .source(
+        "
+        1 + 1
+        ",
+      )
       .expected(vec![
         (Number, Some("1")),
         (Plus, Some("+")),
@@ -366,7 +369,11 @@ mod tests {
   #[test]
   fn string() -> Result {
     Test::new()
-      .source("\"foo\"")
+      .source(
+        "
+        \"foo\"
+        ",
+      )
       .expected(vec![(StringLiteral, Some("foo")), (Eof, None)])
       .run()
   }
@@ -374,7 +381,11 @@ mod tests {
   #[test]
   fn ident() -> Result {
     Test::new()
-      .source("var foo = 1;")
+      .source(
+        "
+        var foo = 1;
+        ",
+      )
       .expected(vec![
         (Var, Some("var")),
         (Identifier, Some("foo")),
@@ -389,7 +400,12 @@ mod tests {
   #[test]
   fn whitespace() -> Result {
     Test::new()
-      .source("var \tfoo = \t1;\n print foo;")
+      .source(
+        "
+        var   foo =   1;
+        print foo;
+        ",
+      )
       .expected(vec![
         (Var, Some("var")),
         (Identifier, Some("foo")),
@@ -407,7 +423,12 @@ mod tests {
   #[test]
   fn line_comment() -> Result {
     Test::new()
-      .source("// var foo = 1;\nprint foo;")
+      .source(
+        "
+        // var foo = 1;
+        print foo;
+       ",
+      )
       .expected(vec![
         (Print, Some("print")),
         (Identifier, Some("foo")),
@@ -420,7 +441,15 @@ mod tests {
   #[test]
   fn block_comment() -> Result {
     Test::new()
-      .source("/*\n var foo = 1;\nprint foo;\n*/\nvar bar = 1;")
+      .source(
+        "
+        /*
+         * var foo = 1;
+         * print foo;
+         */
+        var bar = 1;
+        ",
+      )
       .expected(vec![
         (Var, Some("var")),
         (Identifier, Some("bar")),
@@ -436,7 +465,16 @@ mod tests {
   fn conditionals() -> Result {
     Test::new()
       .source(
-        "var foo = 1;\nvar bar = 2;\nif (foo == 1) {\nprint bar;\n} else {\nprint foo;\n}"
+        "
+        var foo = 1;
+        var bar = 2;
+
+        if (foo == 1) {
+          print bar;
+        } else {
+          print foo;
+        }
+        ",
       )
       .expected(vec![
         (Var, Some("var")),
@@ -475,7 +513,17 @@ mod tests {
   fn functions() -> Result {
     Test::new()
       .source(
-        "fun add(a, b) {\n return a + b;\n }\n fun main(a, b) {\n return add(a, b);\n }\n print main(2, 2);"
+        "
+        fun add(a, b) {
+          return a + b;
+        }
+
+        fun main(a, b) {
+          return add(a, b);
+        }
+
+        print main(2, 2);
+        ",
       )
       .expected(vec![
         (Fun, Some("fun")),
@@ -526,7 +574,11 @@ mod tests {
   fn for_loop() -> Result {
     Test::new()
       .source(
-        "for (var i = 0; i < 10; i = i + 1) {\n  print \"hello, world!\"\n}",
+        "
+        for (var i = 0; i < 10; i = i + 1) {
+          print \"hello, world!\"
+        }
+        ",
       )
       .expected(vec![
         (For, Some("for")),
@@ -559,7 +611,13 @@ mod tests {
   fn while_loop() -> Result {
     Test::new()
       .source(
-        "var foo = 1;\nwhile (foo < 10) {\n  print foo;\n  foo = foo + 1;\n }",
+        "
+        var foo = 1;
+        while (foo < 10) {
+          print foo;
+          foo = foo + 1;
+        }
+        ",
       )
       .expected(vec![
         (Var, Some("var")),

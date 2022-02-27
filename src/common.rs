@@ -18,10 +18,6 @@ pub(crate) use {
   structopt::StructOpt,
 };
 
-// test dependencies
-#[cfg(test)]
-pub(crate) use pretty_assertions;
-
 // structs and enums
 pub(crate) use crate::{
   arguments::Arguments,
