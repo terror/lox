@@ -9,6 +9,7 @@ mod lexer;
 mod literal;
 mod parser;
 mod position;
+mod printer;
 mod token;
 mod token_kind;
 mod visitor;

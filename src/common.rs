@@ -32,6 +32,7 @@ pub(crate) use crate::{
   literal::Literal,
   parser::Parser,
   position::Position,
+  printer::Printer,
   token::Token,
   token_kind::TokenKind::{self, *},
 };
