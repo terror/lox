@@ -37,63 +37,56 @@ impl Interpreter {
   }
 
   fn visit_unary(&self, operator: Token, right: Expr) -> Literal {
-    let right = self.eval(right);
-
-    if let Literal::Number(value) = right {
-      return match operator.kind {
-        Minus => Literal::Number(-1.0 * value),
-        _ => Literal::Nil,
-      };
+    match (operator.kind, self.eval(right)) {
+      (Minus, Literal::Number(value)) => Literal::Number(-1.0 * value),
+      (Bang, Literal::Boolean(value)) => Literal::Boolean(!value),
+      _ => Literal::Nil,
     }
-
-    if let Literal::Boolean(value) = right {
-      return match operator.kind {
-        Bang => Literal::Boolean(!value),
-        _ => Literal::Nil,
-      };
-    }
-
-    Literal::Nil
   }
 
   fn visit_binary(&self, left: Expr, operator: Token, right: Expr) -> Literal {
-    let left = self.eval(left);
-    let right = self.eval(right);
-
-    if let Literal::Number(l) = left {
-      if let Literal::Number(r) = right {
-        return match operator.kind {
-          BangEqual => Literal::Boolean(l != r),
-          EqualEqual => Literal::Boolean(l == r),
-          Greater => Literal::Boolean(l > r),
-          GreaterEqual => Literal::Boolean(l >= r),
-          Less => Literal::Boolean(l < r),
-          LessEqual => Literal::Boolean(l <= r),
-          Minus => Literal::Number(l - r),
-          Plus => Literal::Number(l + r),
-          Slash => Literal::Number(l / r),
-          Star => Literal::Number(l * r),
-          _ => Literal::Nil,
-        };
+    match (self.eval(left), operator.kind, self.eval(right)) {
+      (Literal::Number(l), BangEqual, Literal::Number(r)) => {
+        Literal::Boolean(l != r)
       }
-    }
-
-    if let Literal::String(l) = left {
-      if let Literal::String(r) = right {
-        return match operator.kind {
-          BangEqual => Literal::Boolean(l != r),
-          EqualEqual => Literal::Boolean(l == r),
-          Greater => Literal::Boolean(l > r),
-          GreaterEqual => Literal::Boolean(l >= r),
-          Less => Literal::Boolean(l < r),
-          LessEqual => Literal::Boolean(l <= r),
-          Plus => Literal::String(format!("{}{}", l, r)),
-          _ => Literal::Nil,
-        };
+      (Literal::Number(l), EqualEqual, Literal::Number(r)) => {
+        Literal::Boolean(l == r)
       }
+      (Literal::Number(l), Greater, Literal::Number(r)) => {
+        Literal::Boolean(l > r)
+      }
+      (Literal::Number(l), GreaterEqual, Literal::Number(r)) => {
+        Literal::Boolean(l >= r)
+      }
+      (Literal::Number(l), Less, Literal::Number(r)) => Literal::Boolean(l < r),
+      (Literal::Number(l), LessEqual, Literal::Number(r)) => {
+        Literal::Boolean(l <= r)
+      }
+      (Literal::Number(l), Minus, Literal::Number(r)) => Literal::Number(l - r),
+      (Literal::Number(l), Plus, Literal::Number(r)) => Literal::Number(l + r),
+      (Literal::Number(l), Slash, Literal::Number(r)) => Literal::Number(l / r),
+      (Literal::Number(l), Star, Literal::Number(r)) => Literal::Number(l * r),
+      (Literal::String(l), BangEqual, Literal::String(r)) => {
+        Literal::Boolean(l != r)
+      }
+      (Literal::String(l), EqualEqual, Literal::String(r)) => {
+        Literal::Boolean(l == r)
+      }
+      (Literal::String(l), Greater, Literal::String(r)) => {
+        Literal::Boolean(l > r)
+      }
+      (Literal::String(l), GreaterEqual, Literal::String(r)) => {
+        Literal::Boolean(l >= r)
+      }
+      (Literal::String(l), Less, Literal::String(r)) => Literal::Boolean(l < r),
+      (Literal::String(l), LessEqual, Literal::String(r)) => {
+        Literal::Boolean(l <= r)
+      }
+      (Literal::String(l), Plus, Literal::String(r)) => {
+        Literal::String(format!("{}{}", l, r))
+      }
+      _ => Literal::Nil,
     }
-
-    Literal::Nil
   }
 }
 

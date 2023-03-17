@@ -16,14 +16,14 @@ clippy:
   cargo clippy --all-targets --all-features
 
 fmt-check:
-  cargo +nightly fmt --all -- --check
+  cargo fmt --all -- --check
   @echo formatting check done
 
 run *args:
 	cargo run -- --{{args}}
 
 fmt:
-	cargo +nightly fmt
+	cargo fmt
 
 check:
  cargo check
