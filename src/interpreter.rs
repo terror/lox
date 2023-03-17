@@ -96,56 +96,88 @@ mod tests {
 
   struct Test {
     interpreter: Interpreter,
-    source: String,
-    expected: String,
+    source: Vec<String>,
+    expected: Vec<String>,
   }
 
   impl Test {
     fn new() -> Self {
       Self {
         interpreter: Interpreter::new(),
-        source: String::new(),
-        expected: String::new(),
+        source: Vec::new(),
+        expected: Vec::new(),
       }
     }
 
-    fn source(self, source: &str) -> Self {
+    fn source(self, source: Vec<&str>) -> Self {
       Self {
-        source: source.to_owned(),
+        source: source.iter().map(|s| s.to_string()).collect(),
         ..self
       }
     }
 
-    fn expected(self, expected: &str) -> Self {
+    fn expected(self, expected: Vec<&str>) -> Self {
       Self {
-        expected: expected.to_owned(),
+        expected: expected.iter().map(|s| s.to_string()).collect(),
         ..self
       }
     }
 
     fn run(&self) -> Result {
-      Ok(assert_eq!(
-        self
-          .interpreter
-          .eval(Parser::parse(Lexer::lex(&self.source)?)?)
-          .to_string(),
-        self.expected
-      ))
+      self.source.iter().zip(self.expected.clone()).try_for_each(
+        |(source, expected)| -> Result {
+          assert_eq!(
+            self
+              .interpreter
+              .eval(Parser::parse(Lexer::lex(source)?)?)
+              .to_string(),
+            expected
+          );
+          Ok(())
+        },
+      )
     }
   }
 
   #[test]
   fn arithmetic() -> Result {
-    Test::new().source("1 + 1 / 2").expected("1.5").run()
+    Test::new()
+      .source(vec!["1 + 1 / 2"])
+      .expected(vec!["1.5"])
+      .run()
   }
 
   #[test]
   fn grouping() -> Result {
-    Test::new().source("(1 + 1) / 2").expected("1").run()
+    Test::new()
+      .source(vec!["(1 + 1) / 2"])
+      .expected(vec!["1"])
+      .run()
+  }
+
+  #[test]
+  fn comparison() -> Result {
+    Test::new()
+      .source(vec![
+        "((2 * 3) / 2) > (8 * 2 * (5 - 2))",
+        "((2 * 3) / 2) < (8 * 2 * (5 - 2))",
+        "1 == 1",
+        "1 != 2",
+        "1 >= 2",
+        "1 <= 2",
+        "\"foo\" == \"foo\"",
+      ])
+      .expected(vec![
+        "false", "true", "true", "true", "false", "true", "true",
+      ])
+      .run()
   }
 
   #[test]
   fn string_concatenation() -> Result {
-    Test::new().source("\"1\" + \"1\"").expected("11").run()
+    Test::new()
+      .source(vec!["\"1\" + \"1\"", "\"foo\" + \"bar\""])
+      .expected(vec!["11", "foobar"])
+      .run()
   }
 }
